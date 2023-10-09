@@ -68,6 +68,7 @@ def get_movie_by_id(id: int = Path(ge=1, le = 2002)) -> Movie:
             return JSONResponse(content=item)
     return JSONResponse(status_code = 404, content=[])
 
+
 #method to get movies with a specific category
 @app.get('/movies/', tags = ['movies'], response_model = List[Movie]) #Query mode
 def get_movies_by_category(category: str = Query(min_length = 5, max_length = 15)) -> List[Movie]:
