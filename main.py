@@ -1,8 +1,19 @@
 from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from jwt_manager import create_token
+from typing import Any, Coroutine, Optional, List
+
+from starlette.requests import Request
+from jwt_manager import create_token, validate_token
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+class JWTBearer(HTTPBearer):
+    async def __call__(self, request: Request):
+        auth = await super().__call__(request)
+        data = validate_token(auth.credentials)
+        if data['email'] != "user" :
+            return
+        
 
 #class User 
 class User(BaseModel):
@@ -11,7 +22,7 @@ class User(BaseModel):
 
 #class Movie with BaseModel and Field validations
 class Movie(BaseModel):
-    id: Optional[int] = None
+    id: Optional[int] = None 
     title: str = Field(min_length = 5 ,max_length=15)
     overview: str = Field(min_length = 15 ,max_length=60)
     year: int = Field(default = 2023, le=2023)
@@ -63,7 +74,10 @@ def message():
 
 @app.post('/login', tags = ['auth'])
 def login(user: User):
-    return user
+    if user.email == "user" and user.password == "password":
+        token: str = create_token(user.model_dump())    
+        return JSONResponse(status_code = 200, content = token)
+    return JSONResponse(status_code = 404)
 
 # method to obtain all the movies
 @app.get('/movies', tags = ['movies'], response_model=List[Movie], status_code=200)
