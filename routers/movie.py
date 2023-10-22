@@ -40,34 +40,26 @@ def get_movies_by_category(category: str = Query(min_length = 5, max_length = 15
 @movie_router.post('/movies', tags = ['movies'], response_model = dict,status_code = 201)
 def create_movie(movie: Movie) -> dict:
     db = Session()
-    new_movie = MovieModel(**movie.model_dump())
-    db.add(new_movie) # add new movie t
-    db.commit() #update the changes in the database
+    MovieService(db).create_movie(movie)
     return JSONResponse(status_code = 201 ,content={"message": "Se ha registrado la pelicula correctamente"})
 
 #method to update information from a specific movie by id
 @movie_router.put('/movies/{id}', tags = ['movies'], response_model = dict, status_code = 200)
 def update_movie(id : int, movie: Movie) -> dict:
     db = Session()
-    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    result = MovieService(db).get_movie(id)
     if not result:
         return JSONResponse(status_code = 404, content = {"message": "No encontrado"})
-    result.title = movie.title
-    result.category = movie.category
-    result.overview = movie.overview
-    result.rating = movie.rating
-    result.year = movie.year
-    db.commit()
+    MovieService(db).update_movie(id, movie)
     return JSONResponse(status_code = 200, content = {'mesage': "Se ha actualizado correctamente la informacion de la pelicula"})
 
 #method to delete a movie with id
 @movie_router.delete('/movies/{id}', tags = ['movies'], response_model = dict, status_code = 200)
 def delete_movie(id: int) -> dict:
     db = Session()
-    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    result = MovieService.get_movie(id)
     if not result:
         return JSONResponse(status_code = 404, content = {"message":"No se encontro"})
-    db.delete(result)
-    db.commit()      
+    MovieService(db).delete_movie(id)
     return JSONResponse(status_code = 200, content = {"mesage": "Se ha eliminado correctamente la pelicula"})
 

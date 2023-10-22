@@ -1,4 +1,5 @@
 from models.movie import Movie as moviemodel
+from schemas.movie import Movie
 
 class MovieService():
     
@@ -16,3 +17,24 @@ class MovieService():
     def get_movie_by_category(self, category):
         result = self.db.query(moviemodel).filter(moviemodel.category == category).all()
         return result
+    
+    def create_movie(self, movie: Movie):
+        new_movie = moviemodel(**movie.model_dump())
+        self.db.add(new_movie)
+        self.db.commit()
+        return 
+    
+    def update_movie(self, id: int, data: Movie):
+        movie = self.db.query(moviemodel).filter(moviemodel.id == id).first()
+        movie.title = data.title
+        movie.overview = data.overview
+        movie.year = data.year
+        movie.rating = data.rating
+        movie.category = data.category
+        self.db.commit()
+        return
+    
+    def delete_movie(self, id: int):
+        self.db.query(moviemodel.id == id).delete()
+        self.db.commit()
+        return
